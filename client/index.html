@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pumba Tracker</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <div id="loading" class="loading-screen">
+            <div class="spinner"></div>
+            <p>Загрузка...</p>
+        </div>
+
+        <nav class="nav" id="nav" style="display: none;">
+            <button class="nav-btn active" data-page="dashboard">🏠</button>
+            <button class="nav-btn" data-page="workouts">💪</button>
+            <button class="nav-btn" data-page="habits">🌱</button>
+            <button class="nav-btn" data-page="journal">📔</button>
+            <button class="nav-btn" data-page="analytics">📊</button>
+            <button class="nav-btn" data-page="input">+</button>
+        </nav>
+
+        <main id="main" style="display: none;">
+            <!-- DASHBOARD -->
+            <section id="dashboard" class="page active">
+                <div class="header">
+                    <h1>Pumba</h1>
+                    <p id="current-date"></p>
+                </div>
+
+                <div class="card focus-card">
+                    <h3>🎯 Фокус дня</h3>
+                    <p id="current-focus">Не задан</p>
+                    <button id="set-focus-btn" class="btn-small">Изменить</button>
+                </div>
+                
+                <div class="card">
+                    <h3>📊 Прогресс недели</h3>
+                    <div class="progress-bar">
+                        <div id="week-progress" class="progress-fill"></div>
+                    </div>
+                    <p id="week-stats">0/0 задач</p>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <span class="stat-icon">🔥</span>
+                        <span class="stat-value" id="streak">0</span>
+                        <span class="stat-label">дней streak</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">💤</span>
+                        <span class="stat-value" id="sleep-stat">—</span>
+                        <span class="stat-label">часов сна</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">👣</span>
+                        <span class="stat-value" id="steps-stat">—</span>
+                        <span class="stat-label">шагов</span>
+                    </div>
+                </div>
+
+                <div class="card" id="weekly-summary-card" style="display: none;">
+                    <h3>📋 Сводка недели</h3>
+                    <div id="weekly-summary-content"></div>
+                </div>
+
+                <div class="card quick-actions">
+                    <button class="action-btn" data-type="task">📝 Задача</button>
+                    <button class="action-btn" data-type="workout">💪 Тренировка</button>
+                    <button class="action-btn" data-type="habit">🌱 Привычка</button>
+                    <button class="action-btn" data-type="journal">📔 День</button>
+                </div>
+            </section>
+
+            <!-- WORKOUTS -->
+            <section id="workouts" class="page">
+                <div class="header">
+                    <h1>💪 Тренировки</h1>
+                </div>
+
+                <div class="card">
+                    <h3>Новая тренировка</h3>
+                    <input type="text" id="workout-name" placeholder="Название тренировки">
+                    <input type="number" id="workout-duration" placeholder="Длительность (мин)">
+                    <button id="add-workout-btn" class="btn-primary">Добавить</button>
+                </div>
+
+                <div id="workouts-list"></div>
+            </section>
+
+            <!-- HABITS -->
+            <section id="habits" class="page">
+                <div class="header">
+                    <h1>🌱 Привычки</h1>
+                </div>
+
+                <div class="card">
+                    <h3>Новая привычка</h3>
+                    <input type="text" id="habit-name" placeholder="Название привычки">
+                    <select id="habit-type">
+                        <option value="build">🌱 Выработать</option>
+                        <option value="quit">🚫 Бросить</option>
+                    </select>
+                    <input type="number" id="habit-target" placeholder="Цель (дней)" value="30">
+                    <button id="add-habit-btn" class="btn-primary">Добавить</button>
+                </div>
+
+                <div id="habits-list"></div>
+            </section>
+
+            <!-- JOURNAL -->
+            <section id="journal" class="page">
+                <div class="header">
+                    <h1>📔 Дневник</h1>
+                </div>
+
+                <div class="card">
+                    <h3>Как прошёл день?</h3>
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label>Сон (часов)</label>
+                            <input type="number" id="journal-sleep" step="0.5" placeholder="7.5">
+                        </div>
+                        <div class="form-field">
+                            <label>Качество сна (1-10)</label>
+                            <input type="range" id="journal-sleep-quality" min="1" max="10" value="5">
+                            <span id="sleep-quality-value">5</span>
+                        </div>
+                        <div class="form-field">
+                            <label>Энергия (1-10)</label>
+                            <input type="range" id="journal-energy" min="1" max="10" value="5">
+                            <span id="energy-value">5</span>
+                        </div>
+                        <div class="form-field">
+                            <label>Настроение (1-10)</label>
+                            <input type="range" id="journal-mood" min="1" max="10" value="5">
+                            <span id="mood-value">5</span>
+                        </div>
+                        <div class="form-field">
+                            <label>Стресс (1-10)</label>
+                            <input type="range" id="journal-stress" min="1" max="10" value="5">
+                            <span id="stress-value">5</span>
+                        </div>
+                    </div>
+                    <textarea id="journal-activities" placeholder="Что делал сегодня?"></textarea>
+                    <textarea id="journal-notes" placeholder="Заметки, мысли..."></textarea>
+                    <button id="save-journal-btn" class="btn-primary">Сохранить день</button>
+                </div>
+
+                <div id="journal-entries"></div>
+            </section>
+
+            <!-- ANALYTICS -->
+            <section id="analytics" class="page">
+                <div class="header">
+                    <h1>📊 Аналитика</h1>
+                </div>
+
+                <div class="period-selector">
+                    <button class="period-btn active" data-period="week">Неделя</button>
+                    <button class="period-btn" data-period="month">Месяц</button>
+                    <button class="period-btn" data-period="year">Год</button>
+                </div>
+
+                <div class="card">
+                    <h3>Продуктивность</h3>
+                    <canvas id="productivity-chart"></canvas>
+                </div>
+                
+                <div class="card">
+                    <h3>Сон и настроение</h3>
+                    <canvas id="sleep-mood-chart"></canvas>
+                </div>
+
+                <div class="card">
+                    <h3>Активность</h3>
+                    <canvas id="activity-chart"></canvas>
+                </div>
+
+                <div class="card">
+                    <h3>Баланс сфер</h3>
+                    <canvas id="categories-chart"></canvas>
+                </div>
+
+                <div class="card" id="correlations-card">
+                    <h3>🔍 Закономерности</h3>
+                    <div id="correlations-list"></div>
+                </div>
+
+                <div class="card" id="recommendations-card">
+                    <h3>💡 Рекомендации</h3>
+                    <div id="recommendations-list"></div>
+                </div>
+
+                <div class="card stats-grid">
+                    <div class="stat">
+                        <span class="stat-value" id="completion-rate">0%</span>
+                        <span class="stat-label">Выполнено</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="avg-wellness">0</span>
+                        <span class="stat-label">Ср. самочувствие</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="total-tasks">0</span>
+                        <span class="stat-label">Всего задач</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="total-workouts">0</span>
+                        <span class="stat-label">Тренировок</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- INPUT -->
+            <section id="input" class="page">
+                <div class="input-tabs">
+                    <button class="input-tab active" data-input="task">📝 Задача</button>
+                    <button class="input-tab" data-input="wellness">💭 Самочувствие</button>
+                    <button class="input-tab" data-input="insight">💡 Мысль</button>
+                </div>
+
+                <div id="input-task" class="input-panel active">
+                    <input type="text" id="task-text" placeholder="Что нужно сделать?">
+                    <select id="task-category">
+                        <option value="Работа">Работа</option>
+                        <option value="Здоровье/Спорт">Здоровье/Спорт</option>
+                        <option value="Быт">Быт</option>
+                        <option value="Саморазвитие">Саморазвитие</option>
+                        <option value="Без категории">Без категории</option>
+                    </select>
+                    <select id="task-priority">
+                        <option value="1">Низкий приоритет</option>
+                        <option value="2">Средний</option>
+                        <option value="3">Высокий</option>
+                    </select>
+                    <input type="date" id="task-due-date">
+                    <button id="add-task-btn" class="btn-primary">Добавить</button>
+                </div>
+
+                <div id="input-wellness" class="input-panel">
+                    <label>Самочувствие (1-10): <span id="wellness-value">5</span></label>
+                    <input type="range" id="wellness-slider" min="1" max="10" value="5">
+                    <input type="text" id="wellness-context" placeholder="Контекст (опционально)">
+                    <button id="add-wellness-btn" class="btn-primary">Записать</button>
+                </div>
+
+                <div id="input-insight" class="input-panel">
+                    <textarea id="insight-text" placeholder="Мысль, идея, наблюдение..."></textarea>
+                    <button id="add-insight-btn" class="btn-primary">Сохранить</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="healthkit.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
