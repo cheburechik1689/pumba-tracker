@@ -1,20 +1,25 @@
-const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
 const path = require('path');
 
-// Use Railway volume or local data directory
-const dbPath = process.env.RAILWAY_VOLUME_MOUNT_PATH 
-  ? path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH, 'pumba.db')
-  : path.join(__dirname, 'data', 'pumba.db');
+let db;
 
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('❌ Database connection failed:', err);
-  } else {
-    console.log('✅ Connected to SQLite at:', dbPath);
-  }
-});
-
-// Enable foreign keys
-db.run('PRAGMA foreign_keys = ON');
+// Check if Railway provides PostgreSQL
+if (process.env.DATABASE_URL) {
+  // PostgreSQL mode (Railway)
+  const { Pool } = require('pg');
+  db = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+  console.log('🐘 Using PostgreSQL (Railway)');
+} else {
+  // SQLite mode (local)
+  const sqlite3 = require('sqlite3').verbose();
+  const dbPath = process.env.DB_PATH || path.join(__dirname, 'data', 'pumba.db');
+  const dbDir = path.dirname(dbPath);
+  if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+  db = new sqlite3.Database(dbPath);
+  console.log('📁 Using SQLite:', dbPath);
+}
 
 module.exports = db;
