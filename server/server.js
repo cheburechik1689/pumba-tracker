@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
 const fs = require('fs');
@@ -17,11 +16,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../client')));
 
-// Database
-const dbPath = process.env.DB_PATH || path.join(__dirname, 'data', 'pumba.db');
+// Database - Railway compatible
+const dbPath = process.env.RAILWAY_VOLUME_MOUNT_PATH 
+  ? path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH, 'pumba.db')
+  : path.join(__dirname, 'data', 'pumba.db');
+
 const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+
+const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database(dbPath);
+
+console.log('📁 Database path:', dbPath);
 
 // ========== DATABASE SCHEMA ==========
 db.serialize(() => {
